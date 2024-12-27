@@ -1,0 +1,51 @@
+name: Setup Next.js App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  APP_NAME: karachvi
+
+jobs:
+  create-next-app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Cleanup
+      run: |
+        find . -mindepth 1 -maxdepth 1 -type d ! -name ".github" -exec rm -rf {} +
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20' # Use the version of Node.js you prefer
+
+    - name: Create Next.js app
+      run: npx create-next-app@latest $APP_NAME --src-dir --use-npm --ts --eslint --tailwind --app --import-alias "@/*"
+
+    - name: Move Next.js app to root
+      run: |
+        shopt -s dotglob
+        mv $APP_NAME/* .
+        rmdir $APP_NAME
+
+    - name: Commit changes
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git init
+        git add .
+        git commit -m 'Set up Next.js app with create-next-app'
+
+    - name: Push changes
+      uses: ad-m/github-push-action@v0.6.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
+        force: true
